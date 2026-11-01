@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#101b2c">
 <title>Guest Wi-Fi</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#101b2c,#243c53);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:24px;color:#172638}.card{width:min(100%,420px);background:white;border-radius:24px;padding:32px 26px;text-align:center;box-shadow:0 20px 55px #0003}.symbol{font-size:42px;margin-bottom:8px}h1{font-size:26px;margin:0 0 8px}p{color:#526276;margin:0 0 20px}.qr{width:min(100%,270px);height:auto;border:1px solid #e6ebef;border-radius:14px;padding:12px;background:white}.button{display:block;background:#183e60;color:white;text-decoration:none;border-radius:12px;padding:13px 16px;font-weight:600;margin:18px 0}.steps{text-align:left;background:#f3f6f9;padding:17px;border-radius:12px;font-size:14px;color:#405267}.steps strong{color:#172638}.hint{font-size:13px;color:#526276;margin:12px 0 0}footer{font-size:12px;color:#788494;margin-top:20px}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#101b2c,#243c53);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:24px;color:#172638}.card{width:min(100%,420px);background:white;border-radius:24px;padding:32px 26px;text-align:center;box-shadow:0 20px 55px #0003}.symbol{font-size:42px;margin-bottom:8px}h1{font-size:26px;margin:0 0 8px}p{color:#526276;margin:0 0 20px}.qr{width:min(100%,270px);height:auto;border:1px solid #e6ebef;border-radius:14px;padding:12px;background:white}.button{display:block;background:#183e60;color:white;text-decoration:none;border-radius:12px;padding:13px 16px;font-weight:600;margin:18px 0}.steps{text-align:left;background:#f3f6f9;padding:17px;border-radius:12px;font-size:14px;color:#405267}.steps strong{color:#172638}.safari-help{display:none;margin-top:16px;padding:16px;background:#eef4fa;border-radius:14px;text-align:left}.safari-help h2{font-size:16px;margin:0 0 7px}.safari-help p{font-size:14px;margin:0 0 12px}.safari-help ol{font-size:14px;padding-left:20px;margin:10px 0 0}.copy-button{width:100%;border:0;background:#183e60;color:#fff;padding:13px 16px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer}.copy-status{font-size:13px;margin:8px 0 0;color:#405267;overflow-wrap:anywhere}.hint{font-size:13px;color:#526276;margin:12px 0 0}footer{font-size:12px;color:#788494;margin-top:20px}
 </style>
 </head>
 <body>
@@ -16,6 +16,7 @@
 <p>Connect to our guest Wi-Fi</p>
 <img class="qr" src="wifi-qr.png" alt="Guest Wi-Fi QR code" id="wifiQR">
 <div class="steps" id="instructions" aria-live="polite"><strong>Connect to Wi-Fi:</strong> Scan this QR code with your phone camera. If you're viewing this page on your phone, save the image and open it in your photo gallery to read the code.</div>
+<section class="safari-help" id="safariHelp" aria-label="Open in Safari"><h2>Open in Safari</h2><p>Safari can offer <strong>Join Network</strong> when you press and hold the QR code.</p><button type="button" class="copy-button" id="copyLink">Copy page link</button><p class="copy-status" id="copyStatus" role="status" aria-live="polite"></p><ol><li>Tap <strong>Copy page link</strong>.</li><li>Open <strong>Safari</strong> and paste the link in its address bar.</li><li>Press and hold the QR code, then choose <strong>Join Network</strong>.</li></ol></section>
 <a class="button" href="wifi-qr.png" download="guest-wifi-qr.png">Save Wi-Fi QR code</a>
 <p class="hint" id="hint">Tip: You can also display this code for another phone to scan.</p>
 <footer>Enjoy your visit!</footer>
@@ -29,12 +30,31 @@
   const android=/Android/.test(ua);
   const instructions=document.getElementById('instructions');
   const hint=document.getElementById('hint');
+  const safariHelp=document.getElementById('safariHelp');
+  const copyLink=document.getElementById('copyLink');
+  const copyStatus=document.getElementById('copyStatus');
+  copyLink.addEventListener('click',async function(){
+    const url=window.location.href;
+    try {
+      if(!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(url);
+      copyStatus.textContent='Link copied! Open Safari and paste it into the address bar.';
+    } catch(e) {
+      copyStatus.textContent='Copy the link below, then paste it into Safari:';
+      const field=document.createElement('input');
+      field.type='text';field.readOnly=true;field.value=url;
+      field.setAttribute('aria-label','Page link to copy');
+      field.style.cssText='width:100%;padding:10px;margin-top:8px;border:1px solid #aab9c8;border-radius:8px';
+      copyStatus.appendChild(field);field.focus();field.select();
+    }
+  });
   if(ios&&!chrome&&!otherIOSBrowser){
     instructions.innerHTML='<strong>On iPhone (Safari):</strong> Press and hold the QR code above, then choose <strong>Join Network</strong> if the option appears.';
     hint.textContent='No need to save the image if Safari offers Join Network. Otherwise, save it and try from Photos.';
   }else if(ios){
+    safariHelp.style.display='block';
     instructions.innerHTML='<strong>On iPhone:</strong> For the easiest connection, open this page in <strong>Safari</strong>, press and hold the QR code and select <strong>Join Network</strong> if offered. Alternatively, save the image, open it in Photos and press and hold the code.';
-    hint.textContent='To switch browsers, copy this page’s address and paste it into Safari.';
+    hint.textContent='Alternatively, save the QR code and open it in Photos.';
   }else if(android){
     instructions.innerHTML='<strong>On Android:</strong> Scan this QR code with another phone’s camera. If you’re viewing it on this phone, save the image and use Google Lens or your gallery’s QR scanner to connect.';
     hint.textContent='Some Android phones also support connecting by tapping the NFC sticker.';
